@@ -1,8 +1,8 @@
 /* 
  * File:   PiMotor.h
- * Author: Steve McMillan
+ * Author: Priyanka Patil
  *
- * Created on 07 July 2017, 17:13
+ * Created on 07 July 2018
  */
 
 #ifndef PIMOTOR_H
