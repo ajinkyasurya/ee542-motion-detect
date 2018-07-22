@@ -20,7 +20,7 @@ int main() {
 	
 	//Create a new instance for our Motor.
     PiMotor motor1(M1_FWD, M1_BCK);
-    PiMotor motor2(M2_FWD, M2_BCK);
+   // PiMotor motor2(M2_FWD, M2_BCK);
     
     while (true){
 		motor1.setDebug(true); //Turn on Debug message output (see console window!)
@@ -28,10 +28,10 @@ int main() {
 		delay(2000);
 		motor1.stop(); //Stop the motor  
 		
-		motor2.setDebug(true); //Turn on Debug message output (see console window!)
-		motor2.run(1, 255); //Set PWM value for direction (0 = reverse, 1 = forwards)
-		delay(2000);
-		motor2.stop(); //Stop the motor  
+		//motor2.setDebug(true); //Turn on Debug message output (see console window!)
+		//motor2.run(1, 255); //Set PWM value for direction (0 = reverse, 1 = forwards)
+		//delay(2000);
+		//motor2.stop(); //Stop the motor  
 		
 		delay(10000); //10 second delay
     }
