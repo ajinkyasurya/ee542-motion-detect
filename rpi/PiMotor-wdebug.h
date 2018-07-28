@@ -10,14 +10,14 @@
 
 class PiMotor {
 private:
-    int fwdPin;
-    int revPin;
+    int fPin;
+    int rPin;
+    bool DEBUG = false;
   public:
       PiMotor(int, int);
-      void runFwd();
-      void runRev();
+      void run (int);
       void stop();
-      void start();
+      void setDebug(bool); 
 };
 
 #endif /* PIMOTOR_H */

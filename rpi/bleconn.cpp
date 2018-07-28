@@ -3,6 +3,14 @@
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
+#include <wiringPi.h>
+#include <string>
+
+#define M1_FWD 	4 //Motor 1 Forward
+#define M1_BCK  5 //Motor 1 Reverse
+#define M2_FWD  1 //Motor 2 Forward
+#define M2_BCK 	0 //Motor 2 Reverse
+using namespace std;
 
 int main(int argc, char **argv)
 {
@@ -27,10 +35,22 @@ int main(int argc, char **argv)
 
 	// accept one connection
 	client = accept(s, (struct sockaddr *)&rem_addr, &opt);
+	if (client < 0){
+			perror("error in accept");
+			return 0;
+	}
 
 	ba2str(&rem_addr.rc_bdaddr, buf);
 	fprintf(stderr, "Accepted connection from %s\n", buf);
 	memset(buf, 0, sizeof(buf));
+	
+	//Initiate wiring Pi
+	wiringPiSetup();
+	piHiPri(99);
+	pinMode(M1_FWD, OUTPUT);
+    pinMode(M1_BCK, OUTPUT);
+    pinMode(M2_FWD, OUTPUT);
+    pinMode(M2_BCK, OUTPUT);
 
 	while (true){
 		// read data from the client
@@ -38,15 +58,72 @@ int main(int argc, char **argv)
 		if (bytes_read > 0) {
 			printf("Received [%s]\n", buf);
 		}
-
-		if (buf == "e") {
-			printf("Exit");
+		
+		if ((string)buf == "8"){
+			printf("Going forward\n");
+			digitalWrite(M1_FWD, HIGH);
+			digitalWrite(M1_BCK, LOW);	
+			digitalWrite(M2_FWD, HIGH);
+			digitalWrite(M2_BCK, LOW);
+			
+		}else if ((string)buf == "2"){
+			printf("Going reverse\n");
+			digitalWrite(M1_FWD, LOW);
+			digitalWrite(M1_BCK, HIGH);
+			digitalWrite(M2_FWD, LOW);
+			digitalWrite(M2_BCK, HIGH);
+			
+		}else if ((string)buf == "6"){
+			printf("Going Right\n");
+			digitalWrite(M1_FWD, HIGH);
+			digitalWrite(M1_BCK, LOW);
+			digitalWrite(M2_FWD, LOW);
+			digitalWrite(M2_BCK, LOW);
+			
+		} else if ((string)buf == "4"){
+			printf("Going Left\n");
+			digitalWrite(M1_FWD, LOW);
+			digitalWrite(M1_BCK, LOW);
+			digitalWrite(M2_FWD, HIGH);
+			digitalWrite(M2_BCK, LOW);
+	
+		} else if ((string)buf == "0"){
+			printf("Stop\n");
+			//Stop the motor  
+			digitalWrite(M1_FWD, LOW);
+			digitalWrite(M1_BCK, LOW);
+			digitalWrite(M2_FWD, LOW);
+			digitalWrite(M2_BCK, LOW);
+		}else if ((string)buf == "1"){
+			printf("Starting\n");
+			//Stop the motor  
+			digitalWrite(M1_FWD, HIGH);
+			digitalWrite(M1_BCK, LOW);
+			digitalWrite(M2_FWD, HIGH);
+			digitalWrite(M2_BCK, LOW);
+			delay (2000);
+			digitalWrite(M1_FWD, LOW);
+			digitalWrite(M1_BCK,HIGH);
+			digitalWrite(M2_FWD, LOW);
+			digitalWrite(M2_BCK, HIGH);
+			delay (2000);
+			digitalWrite(M1_FWD, LOW);
+			digitalWrite(M1_BCK,LOW);
+			digitalWrite(M2_FWD, LOW);
+			digitalWrite(M2_BCK, LOW);
+		
+		} else if ((string)buf == "e") {
+			digitalWrite(M1_FWD, LOW);
+			digitalWrite(M1_BCK,LOW);
+			digitalWrite(M2_FWD, LOW);
+			digitalWrite(M2_BCK, LOW);
+			printf("Exit\n");
 			break;
 		}
 
 
 	}
-
+	
 	// close connection
 	close(client);
 	close(s);
