@@ -12,8 +12,9 @@ class PiMotor {
 private:
     int fwdPin;
     int revPin;
+    int pwmPin;
   public:
-      PiMotor(int, int);
+      PiMotor(int, int, int);
       void runFwd();
       void runRev();
       void stop();

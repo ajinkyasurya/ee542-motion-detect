@@ -9,8 +9,10 @@
 
 #define M1_FWD 	4 //Motor 1 Forward
 #define M1_BCK  5 //Motor 1 Reverse
-#define M2_FWD  1 //Motor 2 Forward
-#define M2_BCK 	0 //Motor 2 Reverse
+#define M2_FWD  3 //Motor 2 Forward
+#define M2_BCK 	2 //Motor 2 Reverse
+#define M1_PWM  0 //Motor 1 pwm
+#define M2_PWM  7 //Motor 2 pwm  -- can be either 1  or 7
 using namespace std;
 
 int main() {
@@ -24,8 +26,8 @@ int main() {
 	socklen_t opt = sizeof(rem_addr);
 	
 	//Create a new instance for our Motor.
-    PiMotor motor1(M1_FWD, M1_BCK);
-	PiMotor motor2(M2_FWD, M2_BCK);
+	PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
+	PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
 
 	// allocate socket
 	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
@@ -83,7 +85,7 @@ int main() {
 		if ((string)buf == "6"){
 			printf("Going right\n");
 			motor2.runFwd(); 
-			motor1.stop()
+			motor1.stop();
 		}		
 		if ((string)buf == "0"){
 			printf("Stop\n");

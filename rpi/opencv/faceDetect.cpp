@@ -59,7 +59,7 @@ int main( int argc, const char** argv )
         scale = 0.5;
     tryflip = parser.has("try-flip");
     //inputName = parser.get<string>("@filename");
-    inputName  = "/home/pi/openCV_projects/Capture.PNG";
+    inputName  = "/home/pi/ee542-motion-detect/rpi/opencv/Capture.PNG";
     
     if (!parser.check())
     {

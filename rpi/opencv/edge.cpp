@@ -44,7 +44,7 @@ int main(int argc, const char** argv)
 	help();
 	//CommandLineParser parser(argc, argv, keys);
 	//string filename = parser.get<string>(0);
-	image = imread("/home/pi/openCV_projects/Capture2.PNG", IMREAD_COLOR);
+	image = imread("/home/pi/ee542-motion-detect/rpi/opencv/Capture2.PNG", IMREAD_COLOR);
 	if (image.empty())
 	{
 		//printf("Cannot read image file: %s\n", filename.c_str());

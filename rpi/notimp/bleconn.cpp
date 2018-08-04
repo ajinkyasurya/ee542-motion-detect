@@ -8,8 +8,10 @@
 
 #define M1_FWD 	4 //Motor 1 Forward
 #define M1_BCK  5 //Motor 1 Reverse
-#define M2_FWD  1 //Motor 2 Forward
-#define M2_BCK 	0 //Motor 2 Reverse
+#define M2_FWD  3 //Motor 2 Forward
+#define M2_BCK 	2 //Motor 2 Reverse
+#define M1_PWM  0 //Motor 2 pwm
+#define M2_PWM  7 //Motor 2 pwm  -- can be either 1  or 7
 using namespace std;
 
 int main(int argc, char **argv)
