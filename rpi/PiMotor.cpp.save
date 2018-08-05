@@ -11,6 +11,7 @@
 #include "PiMotor.h"
 #include <softPwm.h>
 
+
 PiMotor::PiMotor(int forwardPin, int reversePin, int PwmPin) {    
 	//Initialise GPIO.
 	if (wiringPiSetup() < 0) {
@@ -26,30 +27,25 @@ PiMotor::PiMotor(int forwardPin, int reversePin, int PwmPin) {
 }
 
 void PiMotor::stop() {
-	softPwmWrite (pwmPin, 0);
     digitalWrite(fwdPin, LOW);
     digitalWrite(revPin, LOW);    
 }
 
 void PiMotor::start() {
-	softPwmWrite (pwmPin, pwmSpeed);
+	softPwmWrite (pwmPin, 30);
     pinMode(fwdPin, OUTPUT);
     pinMode(revPin, OUTPUT);   
 }
 
-void PiMotor::run(int dir, int speed) {
-	pwmSpeed = speed;
-	if (dir == 0) {
-		softPwmWrite(revPin, pwmSpeed);
-		digitalWrite(fwdPin, LOW);
-		digitalWrite(revPin, HIGH);
-	} else if (dir == 1) {
-		softPwmWrite(fwdPin, pwmSpeed);
-		digitalWrite(fwdPin, HIGH);
-		digitalWrite(revPin, LOW);
-	} else {
-	  
-		fprintf(stderr, "Invalid Direction Value in PiMotor::run\n\r");
-	  return;
-	}
+void PiMotor::runFwd () {
+	
+    digitalWrite(fwdPin, HIGH);
+	digitalWrite(revPin, LOW);
+	
+}
+
+void PiMotor::runRev () {
+		softPwmWrite (pwmPin, 30);
+	digitalWrite(fwdPin, LOW);
+    digitalWrite(revPin, HIGH);
 }

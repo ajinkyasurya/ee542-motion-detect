@@ -22,7 +22,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include "tof.h" // time of flight sensor library
 
 int main(int argc, char *argv[])

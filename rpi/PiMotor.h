@@ -13,10 +13,10 @@ private:
     int fwdPin;
     int revPin;
     int pwmPin;
+    int pwmSpeed = 20;
   public:
       PiMotor(int, int, int);
-      void runFwd();
-      void runRev();
+      void run(int, int);
       void stop();
       void start();
 };
