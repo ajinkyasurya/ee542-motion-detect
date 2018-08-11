@@ -16,6 +16,7 @@
 #define M2_BCK 	28 //Motor 2 Reverse
 #define M1_PWM  1 //Motor 1 pwm
 #define M2_PWM  29 //Motor 2 pwm  -- can be either 1  or 7
+#define BLE 23
 #define MINIMUM_SPEED 20
 #define MAXIMUM_SPEED 100
 using namespace std;
@@ -32,7 +33,7 @@ char buf[1024] = { 0 };
 int s, client, bytes_read;
 socklen_t opt = sizeof(rem_addr);
 
-void ble() {
+int ble() {
 	// allocate socket
 	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
 	// bind socket to port 1 of the first available 
@@ -52,7 +53,7 @@ void ble() {
 	ba2str(&rem_addr.rc_bdaddr, buf);
 	fprintf(stderr, "Accepted connection from %s\n", buf);
 	memset(buf, 0, sizeof(buf));
-	return;
+	return 0;
 }
 
 void setDistaceSensor() {
@@ -98,7 +99,12 @@ int main(int argc, char *argv[]) {
     
     wiringPiSetup();
 	piHiPri(99);
-	ble();
+	int bleInd = ble();
+	pinMode (BLE, OUTPUT);
+	digitalWrite (BLE,  LOW);
+	if (bleInd > -1){
+		digitalWrite (BLE,  HIGH);
+	}
 	setDistaceSensor();
 	PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
 	PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
@@ -171,6 +177,7 @@ int main(int argc, char *argv[]) {
 			printf("Exit");
 			close(client);
 			close(s);
+			digitalWrite (BLE,  LOW);
 			break;
 		}
 	}
