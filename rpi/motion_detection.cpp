@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 {
 	cv::TermCriteria termcrit(cv::TermCriteria::COUNT|cv::TermCriteria::EPS,20,0.03);
 	cv::Size subPixWinSize(10,10), winSize(31,31);
-	const int MAX_COUNT = 5;
+	const int MAX_COUNT = 500;
 	
 	cv::Mat raw_data, frame, prev_frame, image;
 	std::vector<cv::Point2f> points[2];
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 	cv::goodFeaturesToTrack(frame, points[1], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 	cv::cornerSubPix(frame, points[1], subPixWinSize, cv::Size(-1,-1), termcrit);
 			
-	for (int j = 0; j < 100; j++)
+	for (int j = 0; j < 200; j++)
 	{
 		auto start = std::chrono::system_clock::now();
 		// Flush the FIFO
@@ -133,10 +133,10 @@ int main(int argc, char** argv)
 		{
 			std::vector<uchar> status;
 			std::vector<float> err;
-			cv::goodFeaturesToTrack(frame, points[1], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
-			cv::cornerSubPix(frame, points[1], subPixWinSize, cv::Size(-1,-1), termcrit);
+			cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
+			cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 			cv::calcOpticalFlowPyrLK(prev_frame, frame, points[0], points[1],
-										status, err, winSize, 3, termcrit, 0, 0.001);
+										status, err, winSize, 3, termcrit, cv::OPTFLOW_LK_GET_MIN_EIGENVALS, 0.001);
 			
 			size_t i;
 			for (i = 0; i < points[1].size(); i++)
@@ -156,9 +156,13 @@ int main(int argc, char** argv)
 			cv::namedWindow("Video Display");
 			cv::imshow("Video Display", image);
 			std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
+			if (diff_mean[0] > 10) {
+				std::cout << "Lots of motion detected!" << std::endl;
+			}
 			//std::cout << points[0].size() << " " << points[1].size() << std::endl;
 			cv::Mat points_diff = cv::Mat(points[1]) - cv::Mat(points[0]);
-			std::cout << points_diff << std::endl << points[0] << std::endl << points[1] << std::endl;
+			//std::cout << points_diff << std::endl << points[0] << std::endl << points[1] << std::endl;
+			//std::cout << cv::Mat(status) << std::endl << cv::Mat(err) << std::endl;
 			cv::waitKey(1);
 		}
 		
