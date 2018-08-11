@@ -18,11 +18,18 @@ def background_thread():
     """Example of how to send server generated events to clients."""
     count = 0
     while True:
-        socketio.sleep(5)
+        socketio.sleep(1)
+        num_cpus = psutil.cpu_count()
+        total_virtual_mem = psutil.virtual_memory().total
+        available_virtual_mem = psutil.virtual_memory().available
         count += 1
         number = round(random()*10, 3)
         socketio.emit('my_response',
-                      {'data': number, 'count': count},
+                      {'data': number,
+                      'count': count,
+                      'num_cpus': num_cpus,
+                      'total_virtual_mem': total_virtual_mem,
+                      'available_virtual_mem': available_virtual_mem},
                       namespace='/test')
 
 @app.route("/")

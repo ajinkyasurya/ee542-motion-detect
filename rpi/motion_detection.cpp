@@ -1,32 +1,4 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <time.h>
-#include <wiringPiSPI.h>
-#include <unistd.h>
-
-#include <ctype.h>
-#include <stdio.h>
-#include <iostream>
-#include <chrono>
-
-#include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/videoio.hpp>
-
-#include "arducam.h"
-
-#define OV2640_CHIPID_HIGH 0x0A
-#define OV2640_CHIPID_LOW 0x0B
-
-#define BUF_SIZE (384*1024)
-
-uint8_t buffer[BUF_SIZE] = {0xFF};
+#include "motion_detection.h"
 
 void setup()
 {
@@ -71,7 +43,7 @@ int main(int argc, char** argv)
 	std::vector<cv::Point2f> points[2];
 	
 	cv::VideoWriter writer;
-	writer.open("test.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 5, cv::Size(320, 240), false);
+	writer.open("test.avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), 5, cv::Size(320, 240), false);
 	
 	setup();
 	arducam_set_format(fmtJPEG);
@@ -115,7 +87,7 @@ int main(int argc, char** argv)
 	cv::goodFeaturesToTrack(frame, points[1], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 	cv::cornerSubPix(frame, points[1], subPixWinSize, cv::Size(-1,-1), termcrit);
 			
-	for (int j = 0; j < 20; j++)
+	for (int j = 0; j < 200; j++)
 	{
 		auto start = std::chrono::system_clock::now();
 		// Flush the FIFO
@@ -164,20 +136,30 @@ int main(int argc, char** argv)
 			cv::calcOpticalFlowPyrLK(prev_frame, frame, points[0], points[1],
 										status, err, winSize, 3, termcrit, 0, 0.001);
 			
-			size_t i, k;
-			for (i = k = 0; i < points[1].size(); i++)
+			size_t i;
+			for (i = 0; i < points[1].size(); i++)
 			{
-				points[1][k++] = points[1][i];
+				//points[1][k++] = points[1][i];
 				cv::circle(image, points[1][i], 3, cv::Scalar(0,255,0), -1, 8);
 			}
+			i = 0;
+			//points[1].resize(k);
+			
+			cv::Mat diff_image;
+			cv::absdiff(prev_frame, frame, diff_image);
+			cv::threshold(diff_image, diff_image, 128, 255, cv::THRESH_BINARY);
+			cv::Scalar diff_mean, diff_std;
+			cv::meanStdDev(diff_image, diff_mean, diff_std);
+			writer.write(image);
+			cv::namedWindow("Video Display");
+			cv::imshow("Video Display", image);
+			std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
+			cv::waitKey(1);
 		}
 		
 		//cv::Mat big_frame(480, 640, CV_8UC1);
 		//cv::resize(frame, big_frame, big_image.size(), 0, 0, cv::INTER_LINEAR);
-		writer.write(image);
-		cv::namedWindow("It works!!!!");
-		cv::imshow("It works!!!!", image);
-		cv::waitKey(1);
+		
 		
 		auto end = std::chrono::system_clock::now();
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

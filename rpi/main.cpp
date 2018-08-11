@@ -10,12 +10,12 @@
 #include "PiMotor.h"
 #include "tof.h"
 
-#define M1_FWD 	4 //Motor 1 Forward
-#define M1_BCK  5 //Motor 1 Reverse
-#define M2_FWD  3 //Motor 2 Forward
-#define M2_BCK 	2 //Motor 2 Reverse
-#define M1_PWM  0 //Motor 1 pwm
-#define M2_PWM  7 //Motor 2 pwm  -- can be either 1  or 7
+#define M1_FWD 	24 //Motor 1 Forward
+#define M1_BCK  25 //Motor 1 Reverse
+#define M2_FWD  27 //Motor 2 Forward
+#define M2_BCK 	28 //Motor 2 Reverse
+#define M1_PWM  1 //Motor 1 pwm
+#define M2_PWM  29 //Motor 2 pwm  -- can be either 1  or 7
 #define MINIMUM_SPEED 20
 #define MAXIMUM_SPEED 100
 using namespace std;
