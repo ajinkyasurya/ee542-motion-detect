@@ -32,7 +32,7 @@ void PiMotor::stop() {
 }
 
 void PiMotor::start() {
-	softPwmWrite (pwmPin, pwmSpeed);
+	softPwmWrite (pwmPin, 50);
     pinMode(fwdPin, OUTPUT);
     pinMode(revPin, OUTPUT);   
 }
