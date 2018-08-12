@@ -17,15 +17,16 @@
 #define M1_PWM  1 //Motor 1 pwm
 #define M2_PWM  29 //Motor 2 pwm 
 #define BLE 23
-#define MINIMUM_SPEED 20
+#define MINIMUM_SPEED 50
 #define MAXIMUM_SPEED 100
 using namespace std;
 
-//Create a new instance for our Motor.
-
+//Create a new instance for the motors
+PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
+PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
 int distReading;
 int direction;
-int speed = 20;
+int speed = MINIMUM_SPEED;
 
 //bluetooth variables
 struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
@@ -33,9 +34,39 @@ char buf[1024] = { 0 };
 int s, client, bytes_read;
 socklen_t opt = sizeof(rem_addr);
 
-//declare motor instances
-PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
-PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
+
+int ble();
+void setDistaceSensor();
+int getDistance();
+void controlMotors();
+
+int main(int argc, char *argv[]) {
+
+	wiringPiSetup();
+	piHiPri(99);
+	string input;
+	while (true) {
+		int bleInd = ble();
+		pinMode(BLE, OUTPUT);
+		digitalWrite(BLE, LOW);
+		if (bleInd > -1) {
+			digitalWrite(BLE, HIGH);
+		}
+		setDistaceSensor();
+		controlMotors();
+		cout << "Conenct again? y/n\n" << endl;
+		cin >> input;
+		if (input == "n" || input == "N") {
+			break;
+		}
+	}
+	//close connection
+	close(client);
+	close(s);
+	digitalWrite(BLE, LOW);
+	return 0;
+}
+
 
 int ble() {
 	// allocate socket
@@ -77,15 +108,16 @@ void setDistaceSensor() {
 }
 
 int getDistance() {
-		int dist, threshold = 99999;
+	int dist, threshold = 99999;
 
-		dist = tofReadDistance();
-		// valid range? 
-		if (dist < 4096){
-			return dist;
-		} else {
-			return threshold;
-		}
+	dist = tofReadDistance();
+	// valid range? 
+	if (dist < 4096) {
+		return dist;
+	}
+	else {
+		return threshold;
+	}
 }
 
 void controlMotors() {
@@ -143,18 +175,18 @@ void controlMotors() {
 		}
 		if ((string)buf == "7") {
 			printf("Increasing speed\n");
-			speed = max(speed + 10, MAXIMUM_SPEED);
+			speed = max(speed + 5, MAXIMUM_SPEED);
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
 		}
 		if ((string)buf == "9") {
 			printf("Decreasing speed\n");
-			speed = min(speed - 10, MINIMUM_SPEED);
+			speed = min(speed - 5, MINIMUM_SPEED);
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
 		}
 		if ((string)buf == "3") {
-			printf("Exit");
+			printf("Exit\n");
 			close(client);
 			close(s);
 			digitalWrite(BLE, LOW);
@@ -162,40 +194,5 @@ void controlMotors() {
 		}
 	}
 
-}
-
-int main(int argc, char *argv[]) {
-    
-    wiringPiSetup();
-	piHiPri(99);
-	bool connect = true;
-	string input; 
-
-	while (connect) {
-		int bleInd = ble();
-		pinMode(BLE, OUTPUT);
-		digitalWrite(BLE, LOW);
-		if (bleInd > -1) {
-			digitalWrite(BLE, HIGH);
-		}
-		setDistaceSensor();
-		controlMotors();
-		//close connection
-		cout << "Conenct again? y/n" << endl;
-		cin >> input;
-		
-		if (input == "n" || input == "N"){
-			break;
-		}
-		//close(client);
-		//close(s);
-		//digitalWrite(BLE, LOW);
-	}
-	
-        close(client);
-        close(s);
-        digitalWrite(BLE, LOW);
-
-	return 0;
 }
 
