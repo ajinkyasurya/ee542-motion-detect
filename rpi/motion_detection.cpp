@@ -42,8 +42,8 @@ int main(int argc, char** argv)
 	cv::Mat raw_data, frame, prev_frame, image;
 	std::vector<cv::Point2f> points[2];
 	
-	cv::VideoWriter writer;
-	writer.open("test.avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), 5, cv::Size(320, 240), false);
+	//cv::VideoWriter writer;
+	//writer.open("test.avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), 5, cv::Size(320, 240), false);
 	
 	setup();
 	arducam_set_format(fmtJPEG);
@@ -87,7 +87,8 @@ int main(int argc, char** argv)
 	cv::goodFeaturesToTrack(frame, points[1], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 	cv::cornerSubPix(frame, points[1], subPixWinSize, cv::Size(-1,-1), termcrit);
 			
-	for (int j = 0; j < 100; j++)
+	//for (int j = 0; j < 100; j++)
+	for (;;)
 	{
 		auto start = std::chrono::system_clock::now();
 		// Flush the FIFO
@@ -138,7 +139,7 @@ int main(int argc, char** argv)
 			cv::meanStdDev(diff_image, diff_mean, diff_std);
 			
 			if (diff_mean[0] > 10) {
-				std::cout << "Motion detected. Recomputing features..." << std::endl;
+				std::cout << "Object entered/leaving scene. Recomputing features..." << std::endl;
 				cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 				cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 			}
@@ -163,16 +164,17 @@ int main(int argc, char** argv)
 			cv::meanStdDev(cv::Mat(magnitude), magnitude_mean, magnitude_std);
 			cv::meanStdDev(cv::Mat(direction), direction_mean, direction_std);
 			
-			if (direction_std[0] < 0.2 && magnitude_mean[0] > 1) {
+			if (direction_std[0] < 0.5) {
 				std::cout << "Vehicle moving" << std::endl;
-			} else if (magnitude_mean[0] > 1) {
+			}
+			if (magnitude_mean[0] > 1) {
 				std::cout << "Movement detected" << std::endl;
 			}
 			
 			//std::cout << points_diff << std::endl << cv::Mat(magnitude) << std::endl << cv::Mat(direction) << std::endl;
 			//std::cout << magnitude_mean[0] << " " << magnitude_std[0] << " " << direction_mean[0] << " " << direction_std[0] << std::endl;
 			
-			writer.write(image);
+			//writer.write(image);
 			cv::namedWindow("Video Display");
 			cv::imshow("Video Display", image);
 			//std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
@@ -187,7 +189,7 @@ int main(int argc, char** argv)
 		cv::swap(prev_frame, frame);
 	}
 	
-	writer.release();
+	//writer.release();
 	
 	return 0;
 }
