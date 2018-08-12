@@ -12,12 +12,13 @@
 
 #define M1_FWD 	25 //Motor 1 Forward
 #define M1_BCK  24 //Motor 1 Reverse
+#define M1_PWM  16 //Motor 1 pwm
+
 #define M2_FWD  28 //Motor 2 Forward
 #define M2_BCK 	27 //Motor 2 Reverse
-#define M1_PWM  1 //Motor 1 pwm
 #define M2_PWM  29 //Motor 2 pwm 
 #define BLE 23
-#define MINIMUM_SPEED 50
+#define MINIMUM_SPEED 20
 #define MAXIMUM_SPEED 100
 using namespace std;
 
@@ -52,16 +53,13 @@ int main(int argc, char *argv[]) {
 		if (bleInd > -1) {
 			digitalWrite(BLE, HIGH);
 		}
-		//captureImage();
-		//extraceFeatures();
-		//detectMotion();
 		setDistaceSensor();
 		controlMotors();
-		//cout << "Conenct again? y/n\n" << endl;
-		//cin >> input;
-		//if (input == "n" || input == "N") {
-		//	break;
-		//}
+		cout << "Conenct again? y/n\n" << endl;
+		cin >> input;
+		if (input == "n" || input == "N") {
+			break;
+		}
 	}
 	//close connection
 	close(client);
@@ -126,6 +124,10 @@ int getDistance() {
 void controlMotors() {
 
 	while (true) {
+		//captureImage();
+		//extraceFeatures();
+		//detectMotion();
+		
 		//read data from the client
 		bytes_read = read(client, buf, sizeof(buf));
 		distReading = getDistance();
@@ -156,16 +158,17 @@ void controlMotors() {
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
 		}
-		if ((string)buf == "4") {
-			direction = 1;
-			printf("Going left\n");
-			printf("Distance: %dmm\n", distReading);
-			motor1.run(direction, speed);
-			motor2.stop();
-		}
 		if ((string)buf == "6") {
 			direction = 1;
 			printf("Going right\n");
+			printf("Distance: %dmm\n", distReading);
+			motor1.run(direction, speed);
+			printf("Speed:%d \n", speed);			
+			motor2.stop();
+		}
+		if ((string)buf == "4") {
+			direction = 1;
+			printf("Going left\n");
 			printf("Distance: %d mm\n", distReading);
 			motor2.run(direction, speed);
 			motor1.stop();
@@ -178,13 +181,15 @@ void controlMotors() {
 		}
 		if ((string)buf == "7") {
 			printf("Increasing speed\n");
-			speed = max(speed + 5, MAXIMUM_SPEED);
+			speed = min(speed + 5, MAXIMUM_SPEED);
+			 printf("Speed:%d \n", speed);
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
 		}
 		if ((string)buf == "9") {
 			printf("Decreasing speed\n");
-			speed = min(speed - 5, MINIMUM_SPEED);
+			speed = max(speed - 5, MINIMUM_SPEED);
+			printf("Speed:%d \n", speed);
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
 		}
