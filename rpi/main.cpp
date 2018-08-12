@@ -52,13 +52,16 @@ int main(int argc, char *argv[]) {
 		if (bleInd > -1) {
 			digitalWrite(BLE, HIGH);
 		}
+		//captureImage();
+		//extraceFeatures();
+		//detectMotion();
 		setDistaceSensor();
 		controlMotors();
-		cout << "Conenct again? y/n\n" << endl;
-		cin >> input;
-		if (input == "n" || input == "N") {
-			break;
-		}
+		//cout << "Conenct again? y/n\n" << endl;
+		//cin >> input;
+		//if (input == "n" || input == "N") {
+		//	break;
+		//}
 	}
 	//close connection
 	close(client);

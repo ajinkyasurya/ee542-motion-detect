@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 	cv::goodFeaturesToTrack(frame, points[1], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 	cv::cornerSubPix(frame, points[1], subPixWinSize, cv::Size(-1,-1), termcrit);
 			
-	for (int j = 0; j < 200; j++)
+	for (int j = 0; j < 100; j++)
 	{
 		auto start = std::chrono::system_clock::now();
 		// Flush the FIFO
@@ -145,34 +145,39 @@ int main(int argc, char** argv)
 			
 			std::vector<uchar> status;
 			std::vector<float> err;
-			//cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
-			//cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 			cv::calcOpticalFlowPyrLK(prev_frame, frame, points[0], points[1],
 										status, err, winSize, 3, termcrit, cv::OPTFLOW_LK_GET_MIN_EIGENVALS, 0.001);
 			
-			size_t i;
-			for (i = 0; i < points[1].size(); i++)
+			std::vector<float> magnitude, direction;
+			cv::Mat points_diff = cv::Mat(points[1]) - cv::Mat(points[0]);
+
+			for (size_t i = 0; i < points_diff.size().height; i++)
 			{
-				//points[1][k++] = points[1][i];
+				cv::Point2f point = points_diff.at<cv::Point2f>(i);
+				magnitude.push_back(sqrt(pow(point.x, 2) + pow(point.y, 2)));
+				direction.push_back(atan2(point.x, point.y));
 				cv::circle(image, points[1][i], 3, cv::Scalar(0,255,0), -1, 8);
 			}
-			i = 0;
-			//points[1].resize(k);
+			
+			cv::Scalar magnitude_mean, magnitude_std, direction_mean, direction_std;
+			cv::meanStdDev(cv::Mat(magnitude), magnitude_mean, magnitude_std);
+			cv::meanStdDev(cv::Mat(direction), direction_mean, direction_std);
+			
+			if (direction_std[0] < 0.2 && magnitude_mean[0] > 1) {
+				std::cout << "Vehicle moving" << std::endl;
+			} else if (magnitude_mean[0] > 1) {
+				std::cout << "Movement detected" << std::endl;
+			}
+			
+			//std::cout << points_diff << std::endl << cv::Mat(magnitude) << std::endl << cv::Mat(direction) << std::endl;
+			//std::cout << magnitude_mean[0] << " " << magnitude_std[0] << " " << direction_mean[0] << " " << direction_std[0] << std::endl;
 			
 			writer.write(image);
 			cv::namedWindow("Video Display");
 			cv::imshow("Video Display", image);
-			std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
-			//std::cout << points[0].size() << " " << points[1].size() << std::endl;
-			cv::Mat points_diff = cv::Mat(points[1]) - cv::Mat(points[0]);
-			//std::cout << points_diff << std::endl << points[0] << std::endl << points[1] << std::endl;
-			//std::cout << cv::Mat(status) << std::endl << cv::Mat(err) << std::endl;
+			//std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
 			cv::waitKey(1);
-		}
-		
-		//cv::Mat big_frame(480, 640, CV_8UC1);
-		//cv::resize(frame, big_frame, big_image.size(), 0, 0, cv::INTER_LINEAR);
-		
+		}		
 		
 		auto end = std::chrono::system_clock::now();
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -180,7 +185,6 @@ int main(int argc, char** argv)
 		
 		std::swap(points[1], points[0]);
 		cv::swap(prev_frame, frame);
-		//frame.copyTo(prev_frame);
 	}
 	
 	writer.release();
