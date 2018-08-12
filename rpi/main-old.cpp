@@ -33,10 +33,6 @@ char buf[1024] = { 0 };
 int s, client, bytes_read;
 socklen_t opt = sizeof(rem_addr);
 
-//declare motor instances
-PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
-PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
-
 int ble() {
 	// allocate socket
 	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
@@ -88,114 +84,107 @@ int getDistance() {
 		}
 }
 
-void controlMotors() {
+void goRun(){
 
-	while (true) {
-		//read data from the client
-		bytes_read = read(client, buf, sizeof(buf));
-		distReading = getDistance();
+}
 
-		if (bytes_read > 0) {
-			printf("Received [%s]\n", buf);
-		}
-		if ((string)buf == "1") {
-			printf("Start\n");
-			printf("Distance: %dmm", distReading);
-			//Start the motor
-			motor1.start();
-			motor2.start();
-		}
-		if ((string)buf == "8") {
-			direction = 1;
-			printf("Going forward\n");
-			printf("Distance: %dmm\n", distReading);
-			//Set PWM value for direction (0 = reverse, 1 = forwards)
-			motor1.run(direction, speed);
-			motor2.run(direction, speed);
-		}
-		if ((string)buf == "2") {
-			direction = 0;
-			printf("Going reverse\n");
-			printf("Distance: %dmm\n", distReading);
-			//Set PWM value for direction (0 = reverse, 1 = forwards)
-			motor1.run(direction, speed);
-			motor2.run(direction, speed);
-		}
-		if ((string)buf == "4") {
-			direction = 1;
-			printf("Going left\n");
-			printf("Distance: %dmm\n", distReading);
-			motor1.run(direction, speed);
-			motor2.stop();
-		}
-		if ((string)buf == "6") {
-			direction = 1;
-			printf("Going right\n");
-			printf("Distance: %d mm\n", distReading);
-			motor2.run(direction, speed);
-			motor1.stop();
-		}
-		if ((string)buf == "0") {
-			printf("Stop\n");
-			//Stop the motor  
-			motor1.stop();
-			motor2.stop();
-		}
-		if ((string)buf == "7") {
-			printf("Increasing speed\n");
-			speed = max(speed + 10, MAXIMUM_SPEED);
-			motor1.run(direction, speed);
-			motor2.run(direction, speed);
-		}
-		if ((string)buf == "9") {
-			printf("Decreasing speed\n");
-			speed = min(speed - 10, MINIMUM_SPEED);
-			motor1.run(direction, speed);
-			motor2.run(direction, speed);
-		}
-		if ((string)buf == "3") {
-			printf("Exit");
-			close(client);
-			close(s);
-			digitalWrite(BLE, LOW);
-			break;
-		}
-	}
+void goLeft(){
 
+}
+
+void goRight(){
 }
 
 int main(int argc, char *argv[]) {
     
     wiringPiSetup();
 	piHiPri(99);
-	bool connect = true;
-	string input; 
+	int bleInd = ble();
+	pinMode (BLE, OUTPUT);
+	digitalWrite (BLE,  LOW);
+	if (bleInd > -1){
+		digitalWrite (BLE,  HIGH);
+	}
+	setDistaceSensor();
+	PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
+	PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
 
-	while (connect) {
-		int bleInd = ble();
-		pinMode(BLE, OUTPUT);
-		digitalWrite(BLE, LOW);
-		if (bleInd > -1) {
-			digitalWrite(BLE, HIGH);
-		}
-		setDistaceSensor();
-		controlMotors();
-		//close connection
-		cout << "Conenct again? y/n" << endl;
-		cin >> input;
+	
+	while (true){
+		//read data from the client
+		bytes_read = read(client, buf, sizeof(buf));
+		distReading = getDistance();
 		
-		if (input == "n" || input == "N"){
+		if (bytes_read > 0) {
+			printf("Received [%s]\n", buf);
+		}		
+		if ((string)buf == "1"){
+			printf("Start\n");			
+			printf("Distance: %dmm", distReading );
+			//Start the motor
+			motor1.start();
+			motor2.start();		
+		}		
+		if ((string)buf == "8"){
+			direction = 1;
+			printf("Going forward\n");
+			printf("Distance: %dmm\n", distReading );
+			//Set PWM value for direction (0 = reverse, 1 = forwards)
+			motor1.run(direction, speed); 
+			motor2.run(direction, speed);
+		}		
+		if ((string)buf == "2"){
+			direction = 0;
+			printf("Going reverse\n");
+			printf("Distance: %dmm\n", distReading );
+			//Set PWM value for direction (0 = reverse, 1 = forwards)
+			motor1.run(direction, speed); 
+			motor2.run(direction, speed);
+		}		
+		if ((string)buf == "4"){
+			direction = 1;
+			printf("Going left\n");
+			printf("Distance: %dmm\n", distReading );
+			motor1.run(direction, speed); 
+			motor2.stop();
+		}		
+		if ((string)buf == "6"){
+			direction = 1;
+			printf("Going right\n");
+			printf("Distance: %d mm\n", distReading );
+			motor2.run(direction, speed); 
+			motor1.stop();
+		}		
+		if ((string)buf == "0"){
+			printf("Stop\n");
+			//Stop the motor  
+			motor1.stop();
+			motor2.stop();
+		}
+		if ((string)buf == "7"){
+			printf("Increasing speed\n");
+			speed = max(speed + 10, MAXIMUM_SPEED);
+			motor1.run(direction, speed); 
+			motor2.run(direction, speed);
+		}
+		if ((string)buf == "9"){
+			printf("Decreasing speed\n");
+			speed = min(speed - 10, MINIMUM_SPEED);
+			motor1.run(direction, speed); 
+			motor2.run(direction, speed);
+		}
+		if ((string)buf == "e"){
+			printf("Exit");
+			close(client);
+			close(s);
+			digitalWrite (BLE,  LOW);
 			break;
 		}
-		//close(client);
-		//close(s);
-		//digitalWrite(BLE, LOW);
 	}
-	
-        close(client);
-        close(s);
-        digitalWrite(BLE, LOW);
-
+   
+	//close connection
+	close(client);
+	close(s);
 	return 0;
 }
 

@@ -155,9 +155,9 @@ void controlMotors() {
 		}
 		if ((string)buf == "3") {
 			printf("Exit");
-			//close(client);
-			//close(s);
-			//digitalWrite(BLE, LOW);
+			close(client);
+			close(s);
+			digitalWrite(BLE, LOW);
 			break;
 		}
 	}
@@ -168,8 +168,10 @@ int main(int argc, char *argv[]) {
     
     wiringPiSetup();
 	piHiPri(99);
+	bool connect = true;
+	string input = 'y'; 
 
-	while (true) {
+	while (connect) {
 		int bleInd = ble();
 		pinMode(BLE, OUTPUT);
 		digitalWrite(BLE, LOW);
@@ -179,10 +181,24 @@ int main(int argc, char *argv[]) {
 		setDistaceSensor();
 		controlMotors();
 		//close connection
-		close(client);
-		close(s);
-		digitalWrite(BLE, LOW);
+		cout << "Conen
+                close(client);
+                close(s);
+                digitalWrite(BLE, LOW);
+ct again? y/n" << endl;
+		cin >> s;
+		
+		if (input == "n" || input == "N"){
+			break;
+		}
+		//close(client);
+		//close(s);
+		//digitalWrite(BLE, LOW);
 	}
+	
+                close(client);
+                close(s);
+                digitalWrite(BLE, LOW);
 
 	return 0;
 }

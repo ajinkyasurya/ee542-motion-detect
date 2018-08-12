@@ -131,10 +131,22 @@ int main(int argc, char** argv)
 		
 		if (!points[0].empty())
 		{
+			cv::Mat diff_image;
+			cv::absdiff(prev_frame, frame, diff_image);
+			cv::threshold(diff_image, diff_image, 128, 255, cv::THRESH_BINARY);
+			cv::Scalar diff_mean, diff_std;
+			cv::meanStdDev(diff_image, diff_mean, diff_std);
+			
+			if (diff_mean[0] > 10) {
+				std::cout << "Motion detected. Recomputing features..." << std::endl;
+				cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
+				cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
+			}
+			
 			std::vector<uchar> status;
 			std::vector<float> err;
-			cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
-			cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
+			//cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
+			//cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 			cv::calcOpticalFlowPyrLK(prev_frame, frame, points[0], points[1],
 										status, err, winSize, 3, termcrit, cv::OPTFLOW_LK_GET_MIN_EIGENVALS, 0.001);
 			
@@ -147,18 +159,10 @@ int main(int argc, char** argv)
 			i = 0;
 			//points[1].resize(k);
 			
-			cv::Mat diff_image;
-			cv::absdiff(prev_frame, frame, diff_image);
-			cv::threshold(diff_image, diff_image, 128, 255, cv::THRESH_BINARY);
-			cv::Scalar diff_mean, diff_std;
-			cv::meanStdDev(diff_image, diff_mean, diff_std);
 			writer.write(image);
 			cv::namedWindow("Video Display");
 			cv::imshow("Video Display", image);
 			std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
-			if (diff_mean[0] > 10) {
-				std::cout << "Lots of motion detected!" << std::endl;
-			}
 			//std::cout << points[0].size() << " " << points[1].size() << std::endl;
 			cv::Mat points_diff = cv::Mat(points[1]) - cv::Mat(points[0]);
 			//std::cout << points_diff << std::endl << points[0] << std::endl << points[1] << std::endl;
