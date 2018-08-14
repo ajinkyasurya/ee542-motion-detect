@@ -23,8 +23,8 @@
 #define MOTION_LED 22
 #define MINIMUM_SPEED 20
 #define MAXIMUM_SPEED 100
-#define DIST_LOW_SP 300
-#define DIST_HI_SP 1000
+#define DIST_LOW_SP 250
+#define DIST_HI_SP 500
 using namespace std;
 
 //Create a new instance for the motors
@@ -286,12 +286,12 @@ void controlMotors() {
 				cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 				digitalWrite(MOTION_LED,HIGH);
                 
-                if (distReading < DIST_LOW_SP){
+                if (distReading < DIST_LOW_SP && commans != 2){
                         command = 0;
-                } else if (DIST_LOW_SP < distReading && distReading < DIST_HI_SP){
-                    speed = speed - 20;
+                }/* else if (DIST_LOW_SP < distReading && distReading < DIST_HI_SP){
+                    speed = max( speed - 20, MINIMUM_SPEED);
                     command = oldCommand;
-                }
+                }*/
                 
                 bytes_read = 1;
 				
