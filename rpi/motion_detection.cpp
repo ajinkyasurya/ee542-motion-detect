@@ -20,8 +20,11 @@
 #define M2_BCK 	27 //Motor 2 Reverse
 #define M2_PWM  29 //Motor 2 pwm 
 #define BLE 23
+#define MOTION_LED 22
 #define MINIMUM_SPEED 20
 #define MAXIMUM_SPEED 100
+#define DIST_LOW_SP 300
+#define DIST_HI_SP 1000
 using namespace std;
 
 //Create a new instance for the motors
@@ -29,12 +32,13 @@ PiMotor motor1(M1_FWD, M1_BCK, M1_PWM);
 PiMotor motor2(M2_FWD, M2_BCK, M2_PWM);
 int distReading;
 int direction;
-int speed = MINIMUM_SPEED;
+int speed = 50;
 
 //bluetooth variables
 struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 char buf[1024] = { 0 };
 int s, client, bytes_read;
+int temp = 0;
 socklen_t opt = sizeof(rem_addr);
 
 
@@ -84,6 +88,7 @@ int main(int argc, char *argv[]) {
 	while (true) {
 		int bleInd = ble();
 		pinMode(BLE, OUTPUT);
+        pinMode(MOTION_LED, OUTPUT);
 		digitalWrite(BLE, LOW);
 		if (bleInd > -1) {
 			digitalWrite(BLE, HIGH);
@@ -216,6 +221,9 @@ void controlMotors() {
     int frame_count = 1;
 
 	while (true) {
+        int oldCommand;
+		  digitalWrite(MOTION_LED,LOW);
+
 		bytes_read = recv(client, buf, sizeof(buf), MSG_DONTWAIT);
 		int command = ((int) buf[0]) - 48;
 		distReading = getDistance();
@@ -272,12 +280,22 @@ void controlMotors() {
 			cv::Scalar diff_mean, diff_std;
 			cv::meanStdDev(diff_image, diff_mean, diff_std);
 			
-			if (distReading < 100 && diff_mean[0] > 5) {
+			if (diff_mean[0] > 5) {
 				std::cout << "Object entered/leaving scene. Recomputing features..." << std::endl;
 				cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 				cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
-				command = 0;
-				bytes_read = 1;
+				digitalWrite(MOTION_LED,HIGH);
+                
+                if (distReading < DIST_LOW_SP){
+                        command = 0;
+                } else if (DIST_LOW_SP < distReading && distReading < DIST_HI_SP){
+                    speed = speed - 20;
+                    command = oldCommand;
+                }
+                
+                bytes_read = 1;
+				
+                
 			}
 			
 			std::vector<uchar> status;
@@ -304,10 +322,11 @@ void controlMotors() {
 				std::cout << "Vehicle moving" << std::endl;
 				
 			}
-			if (distReading < 100 && magnitude_mean[0] > 1) {
+			if (distReading < DIST_LOW_SP && magnitude_mean[0] > 1) {
 				std::cout << "Close movement detected" << std::endl;
 			} else if (magnitude_mean[0] > 1) {
 				std::cout << "Movement detected" << std::endl;
+                digitalWrite(MOTION_LED,HIGH);
 			}
 			
 			//std::cout << points_diff << std::endl << cv::Mat(magnitude) << std::endl << cv::Mat(direction) << std::endl;
@@ -349,6 +368,7 @@ void controlMotors() {
 			direction = 1;
 			printf("Going forward\n");
 			printf("Distance: %dmm\n", distReading);
+            std::cout << "Speed: " << speed << std::endl;
 			//Set PWM value for direction (0 = reverse, 1 = forwards)
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
@@ -357,6 +377,7 @@ void controlMotors() {
 			direction = 0;
 			printf("Going reverse\n");
 			printf("Distance: %dmm\n", distReading);
+            //std::cout << "Speed: " << speed << std::endl;
 			//Set PWM value for direction (0 = reverse, 1 = forwards)
 			motor1.run(direction, speed);
 			motor2.run(direction, speed);
@@ -365,14 +386,16 @@ void controlMotors() {
 			direction = 1;
 			printf("Going right\n");
 			printf("Distance: %dmm\n", distReading);
+            //std::cout << "Speed: " << speed << std::endl;
 			motor1.run(direction, speed);
 			printf("Speed:%d \n", speed);			
 			motor2.stop();
 		}
 		if (command == 4) {
 			direction = 1;
-			printf("Going left\n");
-			printf("Distance: %d mm\n", distReading);
+			//printf("Going left\n");
+			//printf("Distance: %d mm\n", distReading);
+            std::cout << "Speed: " << speed << std::endl;
 			motor2.run(direction, speed);
 			motor1.stop();
 		}
@@ -382,31 +405,33 @@ void controlMotors() {
 			motor1.stop();
 			motor2.stop();
 		}
-		if (command == 7) {
+		if (command == 7 && oldCommand != 7) {
 			printf("Increasing speed\n");
 			speed = min(speed + 5, MAXIMUM_SPEED);
-			 printf("Speed:%d \n", speed);
-			motor1.run(direction, speed);
-			motor2.run(direction, speed);
+			 //printf("Speed:%d \n", speed);
+			//motor1.run(direction, speed);
+			//motor2.run(direction, speed);
 		}
-		if (command == 9) {
-			printf("Decreasing speed\n");
+		if (command == 9 && oldCommand != 9) {
+			//printf("Decreasing speed\n");
 			speed = max(speed - 5, MINIMUM_SPEED);
-			printf("Speed:%d \n", speed);
-			motor1.run(direction, speed);
-			motor2.run(direction, speed);
+			//printf("Speed:%d \n", speed);
+			//motor1.run(direction, speed);
+			//motor2.run(direction, speed);
 		}
 		if (command == 3) {
-			printf("Exit\n");
+			//printf("Exit\n");
 			close(client);
 			close(s);
 			digitalWrite(BLE, LOW);
 			break;
 		}
+        oldCommand = command;
 		
 		auto end = std::chrono::system_clock::now();
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		std::cout << elapsed.count() << "ms" << std::endl;
+		//std::cout << elapsed.count() << "ms" << std::endl;
+        digitalWrite(MOTION_LED,LOW);
 	}
 
 }
