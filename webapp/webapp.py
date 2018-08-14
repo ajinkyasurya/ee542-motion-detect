@@ -1,6 +1,7 @@
 from threading import Lock
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, disconnect
+import os
 from random import random
 import psutil
 
@@ -19,17 +20,20 @@ def background_thread():
     count = 0
     while True:
         socketio.sleep(1)
-        num_cpus = psutil.cpu_count()
+        cpu_count = psutil.cpu_count()
         total_virtual_mem = psutil.virtual_memory().total
         available_virtual_mem = psutil.virtual_memory().available
+        frame_dir = "/static/images/"
+        frame_src = os.path.join(frame_dir, "image.jpg")
         count += 1
         number = round(random()*10, 3)
         socketio.emit('my_response',
                       {'data': number,
                       'count': count,
-                      'num_cpus': num_cpus,
+                      'cpu_count': cpu_count,
                       'total_virtual_mem': total_virtual_mem,
-                      'available_virtual_mem': available_virtual_mem},
+                      'available_virtual_mem': available_virtual_mem,
+                      'frame_src': frame_src},
                       namespace='/test')
 
 @app.route("/")

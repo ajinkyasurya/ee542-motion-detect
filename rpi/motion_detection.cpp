@@ -212,8 +212,14 @@ void controlMotors() {
 	
 	cv::goodFeaturesToTrack(frame, points[1], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 	cv::cornerSubPix(frame, points[1], subPixWinSize, cv::Size(-1,-1), termcrit);
+    
+    int frame_count = 1;
 
 	while (true) {
+		bytes_read = recv(client, buf, sizeof(buf), MSG_DONTWAIT);
+		int command = ((int) buf[0]) - 48;
+		distReading = getDistance();
+		
 		//captureImage();
 		//extraceFeatures();
 		//detectMotion();
@@ -257,7 +263,7 @@ void controlMotors() {
 		raw_data = cv::Mat(1, image_size, CV_8UC1, (void*) buffer);
 		frame = cv::imdecode(raw_data, 0);
 		frame.copyTo(image);
-		
+				
 		if (!points[0].empty())
 		{
 			cv::Mat diff_image;
@@ -266,10 +272,12 @@ void controlMotors() {
 			cv::Scalar diff_mean, diff_std;
 			cv::meanStdDev(diff_image, diff_mean, diff_std);
 			
-			if (diff_mean[0] > 10) {
+			if (distReading < 100 && diff_mean[0] > 5) {
 				std::cout << "Object entered/leaving scene. Recomputing features..." << std::endl;
 				cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 				cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
+				command = 0;
+				bytes_read = 1;
 			}
 			
 			std::vector<uchar> status;
@@ -294,8 +302,11 @@ void controlMotors() {
 			
 			if (direction_std[0] < 0.5) {
 				std::cout << "Vehicle moving" << std::endl;
+				
 			}
-			if (magnitude_mean[0] > 1) {
+			if (distReading < 100 && magnitude_mean[0] > 1) {
+				std::cout << "Close movement detected" << std::endl;
+			} else if (magnitude_mean[0] > 1) {
 				std::cout << "Movement detected" << std::endl;
 			}
 			
@@ -303,21 +314,27 @@ void controlMotors() {
 			//std::cout << magnitude_mean[0] << " " << magnitude_std[0] << " " << direction_mean[0] << " " << direction_std[0] << std::endl;
 			
 			//writer.write(image);
-			cv::namedWindow("Video Display");
-			cv::imshow("Video Display", image);
+				//cv::namedWindow("Video Display");
+			//cv::imshow("Video Display", image);
 			//std::cout << "Mean: " << diff_mean[0] << " Std: " << diff_std[0] << std::endl;
-			cv::waitKey(1);
+			//cv::waitKey(1);
 		}
+        
+        cv::imwrite("/home/pi/ee542-motion-detect/webapp/static/images/image.jpg", image);
 		
 		std::swap(points[1], points[0]);
 		cv::swap(prev_frame, frame);
+        
+        frame_count++;
 		
 		//read data from the client
 		//bytes_read = read(client, buf, sizeof(buf));
-		bytes_read = recv(client, buf, sizeof(buf), MSG_DONTWAIT);
-		int command = ((int) buf[0]) - 48;
-		distReading = getDistance();
-
+		//printf("Distance: %dmm", distReading);
+		std::cout << "Distance: " << distReading << std::endl;
+		if (distReading < 100) {
+			command = 0;
+		}
+		
 		if (bytes_read > 0) {
 			printf("Received [%d]\n", command);
 		}
