@@ -17,6 +17,7 @@
 
             socket.on('my_response', function(msg) {
                 $('#cpu_count').html(msg.cpu_count);
+                $('#cpu_percent').html(msg.cpu_percent);
                 $('#total_virtual_mem').html(msg.total_virtual_mem);
                 $('#available_virtual_mem').html(msg.available_virtual_mem);
                 $('#feed').attr('src', msg.frame_src + '?' + new Date().getTime());
@@ -52,6 +53,7 @@
 <h1>Motion Detection Diagnostics</h1>
 <h2>Camera Feed</h2>
 <img id="feed" src="" alt="Camera Feed">
+<p id="stats"></p>
 
 <h2>Connection Information</h2>
 	<p>Async mode is: <b>{{ async_mode }}</b></p>
@@ -67,6 +69,10 @@
 		<th>CPU Count</th>
 		<th id="cpu_count"></th>
 	</tr>
+    <tr>
+        <th>CPU Percent</th>
+        <th id="cpu_percent"></th>
+    </tr>
 	<tr>
 		<th>Total Virtual Memory</th>
 		<th id="total_virtual_mem"></th>

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -101,6 +102,7 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 	}
+     digitalWrite(MOTION_LED,LOW);
 	//close connection
 	close(client);
 	close(s);
@@ -221,6 +223,9 @@ void controlMotors() {
     int frame_count = 1;
 
 	while (true) {
+        std::ofstream file;
+        file.open("/home/pi/ee542-motion-detect/webapp/static/images/stats.txt");
+        
         int oldCommand;
 		  digitalWrite(MOTION_LED,LOW);
 
@@ -282,19 +287,19 @@ void controlMotors() {
 			
 			if (diff_mean[0] > 5) {
 				std::cout << "Object entered/leaving scene. Recomputing features..." << std::endl;
+                file << "Object entered/leaving scene. Recomputing features...\n";
 				cv::goodFeaturesToTrack(frame, points[0], MAX_COUNT, 0.01, 10, cv::Mat(), 3, 0, 0.04);
 				cv::cornerSubPix(frame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 				digitalWrite(MOTION_LED,HIGH);
                 
-                if (distReading < DIST_LOW_SP && commans != 2){
+                if (distReading < DIST_LOW_SP && command != 2){
                         command = 0;
+                        //bytes_read = 1;
                 }/* else if (DIST_LOW_SP < distReading && distReading < DIST_HI_SP){
                     speed = max( speed - 20, MINIMUM_SPEED);
                     command = oldCommand;
                 }*/
-                
-                bytes_read = 1;
-				
+                				
                 
 			}
 			
@@ -306,7 +311,7 @@ void controlMotors() {
 			std::vector<float> magnitude, direction;
 			cv::Mat points_diff = cv::Mat(points[1]) - cv::Mat(points[0]);
 
-			for (size_t i = 0; i < points_diff.size().height; i++)
+			for (int i = 0; i < points_diff.size().height; i++)
 			{
 				cv::Point2f point = points_diff.at<cv::Point2f>(i);
 				magnitude.push_back(sqrt(pow(point.x, 2) + pow(point.y, 2)));
@@ -320,12 +325,15 @@ void controlMotors() {
 			
 			if (direction_std[0] < 0.5) {
 				std::cout << "Vehicle moving" << std::endl;
+                file << "Vehicle moving\n";
 				
 			}
 			if (distReading < DIST_LOW_SP && magnitude_mean[0] > 1) {
 				std::cout << "Close movement detected" << std::endl;
+                file << "Close movement detected\n";
 			} else if (magnitude_mean[0] > 1) {
 				std::cout << "Movement detected" << std::endl;
+                file << "Movement detected\n";
                 digitalWrite(MOTION_LED,HIGH);
 			}
 			
@@ -424,6 +432,7 @@ void controlMotors() {
 			close(client);
 			close(s);
 			digitalWrite(BLE, LOW);
+             digitalWrite(MOTION_LED,LOW);
 			break;
 		}
         oldCommand = command;
@@ -432,6 +441,8 @@ void controlMotors() {
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		//std::cout << elapsed.count() << "ms" << std::endl;
         digitalWrite(MOTION_LED,LOW);
+        
+        file.close();
 	}
 
 }

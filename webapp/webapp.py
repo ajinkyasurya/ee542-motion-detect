@@ -21,6 +21,7 @@ def background_thread():
     while True:
         socketio.sleep(1)
         cpu_count = psutil.cpu_count()
+        cpu_percent = psutil.cpu_percent()
         total_virtual_mem = psutil.virtual_memory().total
         available_virtual_mem = psutil.virtual_memory().available
         frame_dir = "/static/images/"
@@ -31,6 +32,7 @@ def background_thread():
                       {'data': number,
                       'count': count,
                       'cpu_count': cpu_count,
+                      'cpu_percent': cpu_percent,
                       'total_virtual_mem': total_virtual_mem,
                       'available_virtual_mem': available_virtual_mem,
                       'frame_src': frame_src},
